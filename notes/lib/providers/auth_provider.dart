@@ -5,10 +5,12 @@ class AuthProvider with ChangeNotifier {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   User? _user;
   bool _isLoading = false;
+  bool _isLogin = true; // Add login/signup toggle state
   String? _lastError;
 
   User? get user => _user;
   bool get isLoading => _isLoading;
+  bool get isLogin => _isLogin; // Add getter
   bool get isAuthenticated => _user != null;
   String? get lastError => _lastError;
 
@@ -22,6 +24,11 @@ class AuthProvider with ChangeNotifier {
 
   void _setLoading(bool value) {
     _isLoading = value;
+    notifyListeners();
+  }
+
+  void toggleAuthMode() {
+    _isLogin = !_isLogin;
     notifyListeners();
   }
 

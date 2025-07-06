@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import 'auth_screen.dart';
-import 'notes_screen.dart';
+import 'notes_screen_updated.dart';
 
 class AuthWrapper extends StatelessWidget {
   const AuthWrapper({super.key});

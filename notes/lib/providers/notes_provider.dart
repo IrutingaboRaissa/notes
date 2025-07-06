@@ -44,18 +44,9 @@ class NotesProvider with ChangeNotifier {
       // Cancel any existing subscription
       _notesSubscription?.cancel();
 
-      // Try with orderBy first, if it fails, try without
-      Query query;
-      try {
-        query = _firestore
-            .collection('notes')
-            .where('userId', isEqualTo: _userId)
-            .orderBy('createdAt', descending: true);
-      } catch (e) {
-        debugPrint('OrderBy failed, using query without orderBy: $e');
-        query =
-            _firestore.collection('notes').where('userId', isEqualTo: _userId);
-      }
+      // Start with a simple query without orderBy to avoid index issues
+      Query query =
+          _firestore.collection('notes').where('userId', isEqualTo: _userId);
 
       _notesSubscription = query.snapshots().listen(
         (QuerySnapshot querySnapshot) {
@@ -64,7 +55,7 @@ class NotesProvider with ChangeNotifier {
                   Note.fromMap(doc.data() as Map<String, dynamic>, doc.id))
               .toList();
 
-          // Sort locally if we couldn't use orderBy
+          // Always sort locally to ensure proper order
           _notes.sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
           debugPrint(
@@ -74,7 +65,10 @@ class NotesProvider with ChangeNotifier {
         },
         onError: (error) {
           debugPrint('Error in notes stream: $error');
-          _setError('Failed to sync notes: $error');
+          // Don't show error to user for index issues, just use fallback
+          if (!error.toString().contains('failed-precondition')) {
+            _setError('Failed to sync notes. Please try again.');
+          }
           _setLoading(false);
         },
       );
