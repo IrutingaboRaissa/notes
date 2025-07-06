@@ -143,19 +143,17 @@ class _NotesScreenState extends State<NotesScreen> {
               onRefresh: () => notesProvider.fetchNotes(),
               child: LayoutBuilder(
                 builder: (context, constraints) {
-                  // Check if we're in landscape mode or have wide screen
                   final isWideScreen = constraints.maxWidth > 600;
                   final crossAxisCount = isWideScreen ? 2 : 1;
 
                   if (isWideScreen) {
-                    // Grid layout for wide screens
                     return GridView.builder(
                       padding: const EdgeInsets.all(16),
                       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: crossAxisCount,
                         crossAxisSpacing: 16,
                         mainAxisSpacing: 12,
-                        childAspectRatio: 2.5, // Adjust card height
+                        childAspectRatio: 2.5, 
                       ),
                       itemCount: notesProvider.notes.length,
                       itemBuilder: (context, index) {
@@ -164,7 +162,6 @@ class _NotesScreenState extends State<NotesScreen> {
                       },
                     );
                   } else {
-                    // List layout for narrow screens
                     return ListView.builder(
                       padding: const EdgeInsets.all(16),
                       itemCount: notesProvider.notes.length,
