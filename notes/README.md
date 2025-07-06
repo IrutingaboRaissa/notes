@@ -1,16 +1,29 @@
-# notes
+# Notes App
 
-A new Flutter project.
+A simple and elegant note-taking app built with Flutter and Firebase. Keep your thoughts organized and accessible across all your devices.
+
+## Features
+
+- **User Authentication** - Secure login and signup with Firebase Auth
+- **Real-time Sync** - Notes are instantly synced across devices using Firestore
+- **CRUD Operations** - Create, read, update, and delete notes seamlessly
+- **Responsive Design** - Works beautifully on phones, tablets, and different orientations
+- **Clean UI** - Modern interface with smooth animations and intuitive controls
+- **Password Visibility Toggle** - Show/hide password option for better user experience
+
+## Tech
+
+- **Flutter** - Cross-platform UI framework
+- **Firebase Auth** - User authentication
+- **Cloud Firestore** - Real-time database
+- **Provider** - State management
 
 ## Getting Started
 
-This project is a starting point for a Flutter application.
+1. Clone this repository
+2. Run `flutter pub get` to install dependencies
+3. Set up your Firebase project and add configuration files
+4. Run `flutter run` to start the app
 
-A few resources to get you started if this is your first Flutter project:
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Built with using Flutter and Firebase
