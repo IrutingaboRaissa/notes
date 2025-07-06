@@ -27,48 +27,55 @@ class NotesProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  String get _userId {
-    final user = _auth.currentUser;
-    if (user == null) throw Exception('User not authenticated');
-    return user.uid;
-  }
-
-  // Start listening to real-time updates
   void startListening() {
     try {
+      // Check if user is authenticated first
+      final user = _auth.currentUser;
+      if (user == null) {
+        debugPrint('Cannot start listening: User not authenticated');
+        _setError('User not authenticated');
+        _setLoading(false);
+        return;
+      }
+
       _setLoading(true);
       _setError(null);
 
-      debugPrint('Starting real-time listener for user: $_userId');
+      debugPrint('Starting real-time listener for user: ${user.uid}');
 
       // Cancel any existing subscription
       _notesSubscription?.cancel();
 
-      // Start with a simple query without orderBy to avoid index issues
       Query query =
-          _firestore.collection('notes').where('userId', isEqualTo: _userId);
+          _firestore.collection('notes').where('userId', isEqualTo: user.uid);
 
       _notesSubscription = query.snapshots().listen(
         (QuerySnapshot querySnapshot) {
+          debugPrint('Received ${querySnapshot.docs.length} documents from Firestore');
+          
           _notes = querySnapshot.docs
-              .map((doc) =>
-                  Note.fromMap(doc.data() as Map<String, dynamic>, doc.id))
+              .map((doc) {
+                try {
+                  final data = doc.data() as Map<String, dynamic>;
+                  debugPrint('Processing note document: ${doc.id} with data: $data');
+                  return Note.fromMap(data, doc.id);
+                } catch (e) {
+                  debugPrint('Error parsing note ${doc.id}: $e');
+                  return null;
+                }
+              })
+              .where((note) => note != null)
+              .cast<Note>()
               .toList();
 
-          // Always sort locally to ensure proper order
           _notes.sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
-          debugPrint(
-              'Real-time update: ${_notes.length} notes for user $_userId');
-
+          debugPrint('Successfully loaded ${_notes.length} notes for user ${user.uid}');
           _setLoading(false);
         },
         onError: (error) {
           debugPrint('Error in notes stream: $error');
-          // Don't show error to user for index issues, just use fallback
-          if (!error.toString().contains('failed-precondition')) {
-            _setError('Failed to sync notes. Please try again.');
-          }
+          _setError('Failed to sync notes. Please check your connection and try again.');
           _setLoading(false);
         },
       );
@@ -79,20 +86,26 @@ class NotesProvider with ChangeNotifier {
     }
   }
 
-  // Stop listening to real-time updates
   void stopListening() {
     _notesSubscription?.cancel();
     _notesSubscription = null;
   }
 
   Future<void> fetchNotes() async {
-    // Use real-time listener instead of one-time fetch
     startListening();
   }
 
   Future<bool> addNote(String title, String content) async {
     try {
       _setError(null);
+
+      // Check if user is authenticated
+      final user = _auth.currentUser;
+      if (user == null) {
+        debugPrint('Cannot add note: User not authenticated');
+        _setError('User not authenticated');
+        return false;
+      }
 
       if (title.trim().isEmpty && content.trim().isEmpty) {
         _setError('Note cannot be empty');
@@ -103,17 +116,16 @@ class NotesProvider with ChangeNotifier {
       final noteData = {
         'title': title.trim(),
         'content': content.trim(),
-        'userId': _userId,
+        'userId': user.uid,
         'createdAt': now.toIso8601String(),
         'updatedAt': now.toIso8601String(),
       };
 
-      debugPrint('Adding note for user: $_userId');
+      debugPrint('Adding note for user: ${user.uid}');
       debugPrint('Note data: $noteData');
 
-      await _firestore.collection('notes').add(noteData);
-
-      debugPrint('Note added successfully - real-time listener will update UI');
+      final docRef = await _firestore.collection('notes').add(noteData);
+      debugPrint('Note added successfully with ID: ${docRef.id}');
 
       return true;
     } catch (e) {
@@ -169,6 +181,53 @@ class NotesProvider with ChangeNotifier {
 
   void clearError() {
     _setError(null);
+  }
+
+  // Test method to check if user can access Firestore
+  Future<void> testFirestoreAccess() async {
+    try {
+      final user = _auth.currentUser;
+      debugPrint('=== FIRESTORE ACCESS TEST ===');
+      debugPrint('Current user: ${user?.uid}');
+      debugPrint('User email: ${user?.email}');
+      
+      if (user == null) {
+        debugPrint('ERROR: No authenticated user found');
+        return;
+      }
+
+      // Try to read from the notes collection
+      debugPrint('Attempting to read notes collection...');
+      final snapshot = await _firestore
+          .collection('notes')
+          .where('userId', isEqualTo: user.uid)
+          .get();
+      
+      debugPrint('Query successful! Found ${snapshot.docs.length} documents');
+      for (var doc in snapshot.docs) {
+        debugPrint('Document ${doc.id}: ${doc.data()}');
+      }
+
+      // Try to write a test document
+      debugPrint('Attempting to write test document...');
+      final testDoc = await _firestore.collection('notes').add({
+        'title': 'Test Note',
+        'content': 'This is a test note',
+        'userId': user.uid,
+        'createdAt': DateTime.now().toIso8601String(),
+        'updatedAt': DateTime.now().toIso8601String(),
+      });
+      debugPrint('Test document created with ID: ${testDoc.id}');
+      
+      // Delete the test document
+      await testDoc.delete();
+      debugPrint('Test document deleted');
+      
+      debugPrint('=== FIRESTORE ACCESS TEST COMPLETED SUCCESSFULLY ===');
+    } catch (e) {
+      debugPrint('=== FIRESTORE ACCESS TEST FAILED ===');
+      debugPrint('Error: $e');
+    }
   }
 
   @override

@@ -15,9 +15,12 @@ class _NotesScreenState extends State<NotesScreen> {
   @override
   void initState() {
     super.initState();
-    // Fetch notes when screen loads
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<NotesProvider>().fetchNotes();
+      final notesProvider = context.read<NotesProvider>();
+      // Run test first to check Firestore access
+      notesProvider.testFirestoreAccess();
+      // Then start listening for notes
+      notesProvider.fetchNotes();
     });
   }
 
