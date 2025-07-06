@@ -85,70 +85,127 @@ class _NotesScreenState extends State<NotesScreen> {
             }
 
             if (notesProvider.notes.isEmpty) {
+              final screenWidth = MediaQuery.of(context).size.width;
+              final isWideScreen = screenWidth > 600;
+
               return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(
-                      Icons.note_add_outlined,
-                      size: 80,
-                      color: Colors.grey,
-                    ),
-                    const SizedBox(height: 16),
-                    const Text(
-                      'Nothing here yet—tap ➕ to add a note.',
-                      style: TextStyle(
-                        fontSize: 18,
+                child: Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isWideScreen ? 40 : 20,
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.note_add_outlined,
+                        size: isWideScreen ? 100 : 80,
                         color: Colors.grey,
-                        fontWeight: FontWeight.w500,
                       ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 20),
-                    ElevatedButton.icon(
-                      onPressed: () => _showAddNoteDialog(context),
-                      icon: const Icon(Icons.add, color: Colors.white),
-                      label: const Text('Add Your First Note',
-                          style: TextStyle(color: Colors.white)),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green.shade600,
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 24, vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                      SizedBox(height: isWideScreen ? 24 : 16),
+                      Text(
+                        'Nothing here yet—tap ➕ to add a note.',
+                        style: TextStyle(
+                          fontSize: isWideScreen ? 20 : 18,
+                          color: Colors.grey,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      SizedBox(height: isWideScreen ? 32 : 20),
+                      ElevatedButton.icon(
+                        onPressed: () => _showAddNoteDialog(context),
+                        icon: const Icon(Icons.add, color: Colors.white),
+                        label: Text(
+                          'Add Your First Note',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: isWideScreen ? 16 : 14,
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green.shade600,
+                          padding: EdgeInsets.symmetric(
+                            horizontal: isWideScreen ? 32 : 24,
+                            vertical: isWideScreen ? 16 : 12,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               );
             }
 
             return RefreshIndicator(
               onRefresh: () => notesProvider.fetchNotes(),
-              child: ListView.builder(
-                padding: const EdgeInsets.all(16),
-                itemCount: notesProvider.notes.length,
-                itemBuilder: (context, index) {
-                  final note = notesProvider.notes[index];
-                  return _buildNoteCard(context, note);
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  // Check if we're in landscape mode or have wide screen
+                  final isWideScreen = constraints.maxWidth > 600;
+                  final crossAxisCount = isWideScreen ? 2 : 1;
+
+                  if (isWideScreen) {
+                    // Grid layout for wide screens
+                    return GridView.builder(
+                      padding: const EdgeInsets.all(16),
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: crossAxisCount,
+                        crossAxisSpacing: 16,
+                        mainAxisSpacing: 12,
+                        childAspectRatio: 2.5, // Adjust card height
+                      ),
+                      itemCount: notesProvider.notes.length,
+                      itemBuilder: (context, index) {
+                        final note = notesProvider.notes[index];
+                        return _buildNoteCard(context, note);
+                      },
+                    );
+                  } else {
+                    // List layout for narrow screens
+                    return ListView.builder(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: notesProvider.notes.length,
+                      itemBuilder: (context, index) {
+                        final note = notesProvider.notes[index];
+                        return _buildNoteCard(context, note);
+                      },
+                    );
+                  }
                 },
               ),
             );
           },
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAddNoteDialog(context),
-        backgroundColor: Colors.green.shade600,
-        child: const Icon(Icons.add, color: Colors.white),
+      floatingActionButton: Builder(
+        builder: (context) {
+          final screenWidth = MediaQuery.of(context).size.width;
+          final isWideScreen = screenWidth > 600;
+
+          return FloatingActionButton(
+            onPressed: () => _showAddNoteDialog(context),
+            backgroundColor: Colors.green.shade600,
+            child: Icon(
+              Icons.add,
+              color: Colors.white,
+              size: isWideScreen ? 28 : 24,
+            ),
+          );
+        },
       ),
     );
   }
 
   Widget _buildNoteCard(BuildContext context, Note note) {
+    final isWideScreen = MediaQuery.of(context).size.width > 600;
+
     return Card(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: EdgeInsets.only(
+        bottom: isWideScreen ? 8 : 12,
+      ),
       elevation: 3,
       shadowColor: Colors.green.shade100,
       shape: RoundedRectangleBorder(
@@ -168,7 +225,7 @@ class _NotesScreenState extends State<NotesScreen> {
           ),
         ),
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: EdgeInsets.all(isWideScreen ? 12 : 16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -178,7 +235,7 @@ class _NotesScreenState extends State<NotesScreen> {
                     child: Text(
                       note.title.isEmpty ? 'Untitled' : note.title,
                       style: TextStyle(
-                        fontSize: 18,
+                        fontSize: isWideScreen ? 16 : 18,
                         fontWeight: FontWeight.bold,
                         color: Colors.green.shade800,
                       ),
@@ -187,42 +244,58 @@ class _NotesScreenState extends State<NotesScreen> {
                     ),
                   ),
                   IconButton(
-                    icon: Icon(Icons.edit, color: Colors.green.shade600),
+                    icon: Icon(
+                      Icons.edit,
+                      color: Colors.green.shade600,
+                      size: isWideScreen ? 20 : 24,
+                    ),
                     onPressed: () => _showEditNoteDialog(context, note),
                     tooltip: 'Edit note',
+                    constraints: BoxConstraints(
+                      minWidth: isWideScreen ? 32 : 40,
+                      minHeight: isWideScreen ? 32 : 40,
+                    ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.delete, color: Colors.red),
+                    icon: Icon(
+                      Icons.delete,
+                      color: Colors.red,
+                      size: isWideScreen ? 20 : 24,
+                    ),
                     onPressed: () => _showDeleteConfirmation(context, note),
                     tooltip: 'Delete note',
+                    constraints: BoxConstraints(
+                      minWidth: isWideScreen ? 32 : 40,
+                      minHeight: isWideScreen ? 32 : 40,
+                    ),
                   ),
                 ],
               ),
               if (note.content.isNotEmpty) ...[
-                const SizedBox(height: 8),
+                SizedBox(height: isWideScreen ? 4 : 8),
                 Text(
                   note.content,
-                  style: const TextStyle(
-                    fontSize: 16,
+                  style: TextStyle(
+                    fontSize: isWideScreen ? 14 : 16,
                     color: Colors.black87,
                   ),
-                  maxLines: 3,
+                  maxLines: isWideScreen ? 2 : 3,
                   overflow: TextOverflow.ellipsis,
                 ),
               ],
-              const SizedBox(height: 12),
+              SizedBox(height: isWideScreen ? 8 : 12),
               Text(
                 'Created: ${_formatDate(note.createdAt)}',
-                style: const TextStyle(
-                  fontSize: 12,
+                style: TextStyle(
+                  fontSize: isWideScreen ? 10 : 12,
                   color: Colors.grey,
                 ),
               ),
               if (note.updatedAt != note.createdAt)
                 Text(
                   'Updated: ${_formatDate(note.updatedAt)}',
-                  style: const TextStyle(
-                    fontSize: 12,
+                  style: TextStyle(
+                    fontSize: isWideScreen ? 10 : 12,
                     color: Colors.grey,
                   ),
                 ),
@@ -240,34 +313,39 @@ class _NotesScreenState extends State<NotesScreen> {
   Future<void> _showAddNoteDialog(BuildContext context) async {
     final titleController = TextEditingController();
     final contentController = TextEditingController();
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isWideScreen = screenWidth > 600;
 
     return showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Add New Note'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: titleController,
-              decoration: const InputDecoration(
-                labelText: 'Title (optional)',
-                border: OutlineInputBorder(),
+        content: SizedBox(
+          width: isWideScreen ? 500 : screenWidth * 0.9,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: titleController,
+                decoration: const InputDecoration(
+                  labelText: 'Title (optional)',
+                  border: OutlineInputBorder(),
+                ),
+                textCapitalization: TextCapitalization.sentences,
               ),
-              textCapitalization: TextCapitalization.sentences,
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: contentController,
-              decoration: const InputDecoration(
-                labelText: 'Content',
-                border: OutlineInputBorder(),
-                alignLabelWithHint: true,
+              const SizedBox(height: 16),
+              TextField(
+                controller: contentController,
+                decoration: const InputDecoration(
+                  labelText: 'Content',
+                  border: OutlineInputBorder(),
+                  alignLabelWithHint: true,
+                ),
+                maxLines: isWideScreen ? 6 : 4,
+                textCapitalization: TextCapitalization.sentences,
               ),
-              maxLines: 4,
-              textCapitalization: TextCapitalization.sentences,
-            ),
-          ],
+            ],
+          ),
         ),
         actions: [
           TextButton(
@@ -314,34 +392,39 @@ class _NotesScreenState extends State<NotesScreen> {
   Future<void> _showEditNoteDialog(BuildContext context, Note note) async {
     final titleController = TextEditingController(text: note.title);
     final contentController = TextEditingController(text: note.content);
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isWideScreen = screenWidth > 600;
 
     return showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Edit Note'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: titleController,
-              decoration: const InputDecoration(
-                labelText: 'Title (optional)',
-                border: OutlineInputBorder(),
+        content: SizedBox(
+          width: isWideScreen ? 500 : screenWidth * 0.9,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: titleController,
+                decoration: const InputDecoration(
+                  labelText: 'Title (optional)',
+                  border: OutlineInputBorder(),
+                ),
+                textCapitalization: TextCapitalization.sentences,
               ),
-              textCapitalization: TextCapitalization.sentences,
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: contentController,
-              decoration: const InputDecoration(
-                labelText: 'Content',
-                border: OutlineInputBorder(),
-                alignLabelWithHint: true,
+              const SizedBox(height: 16),
+              TextField(
+                controller: contentController,
+                decoration: const InputDecoration(
+                  labelText: 'Content',
+                  border: OutlineInputBorder(),
+                  alignLabelWithHint: true,
+                ),
+                maxLines: isWideScreen ? 6 : 4,
+                textCapitalization: TextCapitalization.sentences,
               ),
-              maxLines: 4,
-              textCapitalization: TextCapitalization.sentences,
-            ),
-          ],
+            ],
+          ),
         ),
         actions: [
           TextButton(

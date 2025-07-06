@@ -14,6 +14,7 @@ class _AuthScreenState extends State<AuthScreen> {
   final _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   bool _isLogin = true;
+  bool _isPasswordVisible = false;
 
   @override
   Widget build(BuildContext context) {
@@ -67,7 +68,8 @@ class _AuthScreenState extends State<AuthScreen> {
                   controller: _emailController,
                   decoration: InputDecoration(
                     labelText: 'Email',
-                    labelStyle: const TextStyle(color: Color.fromARGB(255, 5, 5, 5)),
+                    labelStyle:
+                        const TextStyle(color: Color.fromARGB(255, 5, 5, 5)),
                     prefixIcon: const Icon(Icons.email_outlined,
                         color: Color.fromARGB(255, 7, 7, 7)),
                     border: OutlineInputBorder(
@@ -80,8 +82,8 @@ class _AuthScreenState extends State<AuthScreen> {
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16),
-                      borderSide:
-                          const BorderSide(color: Color.fromARGB(255, 17, 70, 19), width: 2),
+                      borderSide: const BorderSide(
+                          color: Color.fromARGB(255, 17, 70, 19), width: 2),
                     ),
                     filled: true,
                     fillColor: Colors.white,
@@ -105,6 +107,23 @@ class _AuthScreenState extends State<AuthScreen> {
                     labelStyle: const TextStyle(color: Color(0xFF64748B)),
                     prefixIcon: const Icon(Icons.lock_outline,
                         color: Color(0xFF64748B)),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _isPasswordVisible
+                            ? Icons.visibility_off
+                            : Icons.visibility,
+                        color: const Color(0xFF64748B),
+                        size: MediaQuery.of(context).size.width > 600 ? 20 : 24,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _isPasswordVisible = !_isPasswordVisible;
+                        });
+                      },
+                      tooltip: _isPasswordVisible
+                          ? 'Hide password'
+                          : 'Show password',
+                    ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16),
                       borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
@@ -115,15 +134,15 @@ class _AuthScreenState extends State<AuthScreen> {
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16),
-                      borderSide:
-                          const BorderSide(color: Color.fromARGB(255, 23, 66, 18), width: 2),
+                      borderSide: const BorderSide(
+                          color: Color.fromARGB(255, 23, 66, 18), width: 2),
                     ),
                     filled: true,
                     fillColor: Colors.white,
                     contentPadding: const EdgeInsets.symmetric(
                         horizontal: 20, vertical: 16),
                   ),
-                  obscureText: true,
+                  obscureText: !_isPasswordVisible,
                   validator: (value) {
                     if (value?.isEmpty ?? true) return 'Password is required';
                     if (value!.length < 6)
@@ -139,7 +158,8 @@ class _AuthScreenState extends State<AuthScreen> {
                       child: ElevatedButton(
                         onPressed: authProvider.isLoading ? null : _handleAuth,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color.fromARGB(255, 16, 55, 14),
+                          backgroundColor:
+                              const Color.fromARGB(255, 16, 55, 14),
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(

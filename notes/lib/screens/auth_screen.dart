@@ -13,6 +13,7 @@ class _AuthScreenState extends State<AuthScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+  bool _isPasswordVisible = false;
 
   @override
   Widget build(BuildContext context) {
@@ -97,6 +98,25 @@ class _AuthScreenState extends State<AuthScreen> {
                         labelStyle: const TextStyle(color: Color(0xFF64748B)),
                         prefixIcon: const Icon(Icons.lock_outline,
                             color: Color(0xFF64748B)),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _isPasswordVisible
+                                ? Icons.visibility_off
+                                : Icons.visibility,
+                            color: const Color(0xFF64748B),
+                            size: MediaQuery.of(context).size.width > 600
+                                ? 20
+                                : 24,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _isPasswordVisible = !_isPasswordVisible;
+                            });
+                          },
+                          tooltip: _isPasswordVisible
+                              ? 'Hide password'
+                              : 'Show password',
+                        ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(16),
                           borderSide:
@@ -117,7 +137,7 @@ class _AuthScreenState extends State<AuthScreen> {
                         contentPadding: const EdgeInsets.symmetric(
                             horizontal: 20, vertical: 16),
                       ),
-                      obscureText: true,
+                      obscureText: !_isPasswordVisible,
                       validator: (value) {
                         if (value?.isEmpty ?? true)
                           return 'Password is required';
