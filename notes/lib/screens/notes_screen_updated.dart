@@ -17,9 +17,6 @@ class _NotesScreenState extends State<NotesScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final notesProvider = context.read<NotesProvider>();
-      // Run test first to check Firestore access
-      notesProvider.testFirestoreAccess();
-      // Then start listening for notes
       notesProvider.fetchNotes();
     });
   }
